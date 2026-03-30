@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rextag Lead Gen AI — MVP1</title>
+  <meta name="description" content="AI-powered personalized outreach email generator for B2B lead generation" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Design tokens ─────────────────────────────── */
+    :root {
+      --bg-base:      #080c14;
+      --bg-card:      rgba(255,255,255,0.04);
+      --bg-card-hov:  rgba(255,255,255,0.07);
+      --border:       rgba(255,255,255,0.08);
+      --border-glow:  rgba(99,179,237,0.4);
+      --accent-blue:  #3b9eff;
+      --accent-cyan:  #00d4ff;
+      --accent-purple:#a855f7;
+      --accent-green: #22d3a0;
+      --text-primary: #f0f6ff;
+      --text-muted:   #6b8099;
+      --text-dim:     #3a4f63;
+      --radius:       16px;
+      --radius-sm:    10px;
+      --glow-blue:    0 0 30px rgba(59,158,255,0.25);
+      --glow-cyan:    0 0 20px rgba(0,212,255,0.2);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-base);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Animated background mesh ──────────────────── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 10% 10%, rgba(59,158,255,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 60% at 90% 80%, rgba(168,85,247,0.06) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 40% at 50% 50%, rgba(0,212,255,0.04) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .page-wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 56px 24px 80px;
+    }
+
+    /* ── Header ────────────────────────────────────── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 52px;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .logo-area {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .logo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, rgba(59,158,255,0.15), rgba(0,212,255,0.08));
+      border: 1px solid rgba(59,158,255,0.25);
+      border-radius: 100px;
+      padding: 4px 14px 4px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent-cyan);
+      width: fit-content;
+    }
+
+    .logo-badge::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent-cyan);
+      box-shadow: 0 0 8px var(--accent-cyan);
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%,100% { opacity:1; transform:scale(1); }
+      50%      { opacity:0.5; transform:scale(0.7); }
+    }
+
+    h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 700;
+      background: linear-gradient(135deg, #f0f6ff 0%, var(--accent-cyan) 60%, var(--accent-purple) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.15;
+    }
+
+    .subtitle {
+      font-size: 15px;
+      color: var(--text-muted);
+      margin-top: 8px;
+      max-width: 520px;
+    }
+
+    /* ── Start button ──────────────────────────────── */
+    #btn-start {
+      cursor: pointer;
+      border: none;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+      color: #fff;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      padding: 14px 36px;
+      border-radius: 12px;
+      letter-spacing: 0.03em;
+      box-shadow: 0 4px 24px rgba(59,158,255,0.35), 0 1px 0 rgba(255,255,255,0.15) inset;
+      transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      white-space: nowrap;
+    }
+
+    #btn-start:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(59,158,255,0.45);
+    }
+
+    #btn-start:active:not(:disabled) { transform: translateY(0); }
+
+    #btn-start:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .btn-icon { font-size: 18px; }
+
+    /* ── Progress bar ──────────────────────────────── */
+    #progress-wrap {
+      display: none;
+      margin-bottom: 32px;
+    }
+
+    #progress-wrap.visible { display: block; }
+
+    .progress-label {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 4px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 100px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
+      border-radius: 100px;
+      transition: width 0.6s ease;
+      box-shadow: var(--glow-cyan);
+    }
+
+    /* ── Stage indicators ──────────────────────────── */
+    .stages {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    .stage-pill {
+      font-size: 12px;
+      padding: 5px 12px;
+      border-radius: 100px;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      background: transparent;
+      transition: all 0.3s;
+    }
+
+    .stage-pill.active {
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+      background: rgba(0,212,255,0.08);
+      box-shadow: 0 0 12px rgba(0,212,255,0.15);
+    }
+
+    .stage-pill.done {
+      border-color: var(--accent-green);
+      color: var(--accent-green);
+      background: rgba(34,211,160,0.08);
+    }
+
+    /* ── Table card ────────────────────────────────── */
+    .table-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      backdrop-filter: blur(20px);
+    }
+
+    .table-card table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .table-card thead th {
+      background: rgba(255,255,255,0.03);
+      padding: 16px 22px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .table-card tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.2s;
+    }
+
+    .table-card tbody tr:last-child { border-bottom: none; }
+
+    .table-card tbody tr:hover { background: var(--bg-card-hov); }
+
+    .table-card tbody td {
+      padding: 20px 22px;
+      vertical-align: top;
+      font-size: 14px;
+    }
+
+    /* ── Person cell ───────────────────────────────── */
+    .person-cell {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      white-space: nowrap;
+    }
+
+    .avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .avatar.blue   { background: linear-gradient(135deg,#1e4db7,#3b9eff); color:#fff; }
+    .avatar.purple { background: linear-gradient(135deg,#6b21a8,#a855f7); color:#fff; }
+    .avatar.teal   { background: linear-gradient(135deg,#0f766e,#22d3a0); color:#fff; }
+
+    .person-info { display: flex; flex-direction: column; gap: 2px; }
+    .person-name { font-weight: 600; color: var(--text-primary); }
+    .person-title { font-size: 12px; color: var(--text-muted); }
+
+    /* ── Company badge ─────────────────────────────── */
+    .company-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      white-space: nowrap;
+    }
+
+    .company-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+    }
+
+    /* ── URLs cell ─────────────────────────────────── */
+    .urls-cell a {
+      display: block;
+      font-size: 12px;
+      color: var(--accent-blue);
+      text-decoration: none;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 220px;
+      margin-bottom: 3px;
+      opacity: 0.8;
+      transition: opacity 0.2s;
+    }
+
+    .urls-cell a:hover { opacity: 1; }
+
+    .no-urls {
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    /* ── Email cell ────────────────────────────────── */
+    .email-cell {
+      min-width: 280px;
+      max-width: 420px;
+    }
+
+    /* Loading skeleton */
+    .email-loading {
+      display: none;
+    }
+
+    .email-loading.visible { display: flex; flex-direction: column; gap: 8px; }
+
+    .skel {
+      height: 10px;
+      border-radius: 6px;
+      background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.04) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+    }
+
+    .skel.w100 { width: 100%; }
+    .skel.w80  { width: 80%; }
+    .skel.w60  { width: 60%; }
+    .skel.w90  { width: 90%; }
+
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* Email result box */
+    .email-result {
+      display: none;
+    }
+
+    .email-result.visible {
+      display: block;
+    }
+
+    .email-box {
+      background: rgba(59,158,255,0.05);
+      border: 1px solid rgba(59,158,255,0.15);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      font-size: 13px;
+      line-height: 1.65;
+      color: #c9dff7;
+      white-space: pre-wrap;
+      word-break: break-word;
+      position: relative;
+    }
+
+    .email-subject {
+      font-weight: 600;
+      color: var(--accent-cyan);
+      font-size: 12px;
+      margin-bottom: 10px;
+      letter-spacing: 0.02em;
+    }
+
+    .email-body { font-size: 13px; }
+
+    .copy-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.06);
+      color: var(--text-muted);
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+
+    .copy-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    .copy-btn.copied { color: var(--accent-green); border-color: var(--accent-green); }
+
+    /* Error state */
+    .email-error {
+      display: none;
+      font-size: 13px;
+      color: #f87171;
+      background: rgba(248,113,113,0.06);
+      border: 1px solid rgba(248,113,113,0.2);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+    }
+
+    .email-error.visible { display: block; }
+
+    /* Placeholder */
+    .email-placeholder {
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+
+    /* ── Status icon ──────────────────────────────── */
+    .status-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .status-icon.waiting  { background: rgba(255,255,255,0.05); color: var(--text-dim); }
+    .status-icon.loading  { background: rgba(59,158,255,0.1); animation: spin-glow 1s linear infinite; }
+    .status-icon.done     { background: rgba(34,211,160,0.12); color: var(--accent-green); }
+    .status-icon.error    { background: rgba(248,113,113,0.1); color: #f87171; }
+
+    @keyframes spin-glow {
+      0%   { box-shadow: 0 0 0 0 rgba(59,158,255,0.4); }
+      50%  { box-shadow: 0 0 12px 4px rgba(59,158,255,0.2); }
+      100% { box-shadow: 0 0 0 0 rgba(59,158,255,0.4); }
+    }
+
+    .spinner {
+      width: 14px; height: 14px;
+      border: 2px solid rgba(59,158,255,0.2);
+      border-top-color: var(--accent-blue);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ── Footer ────────────────────────────────────── */
+    footer {
+      margin-top: 48px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+
+    footer span { color: var(--accent-blue); }
+
+    /* ── Responsive ────────────────────────────────── */
+    @media (max-width: 768px) {
+      header { flex-direction: column; align-items: flex-start; }
+      .table-card { overflow-x: auto; }
+      .email-cell { min-width: 220px; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ── Header ──────────────────────────────── -->
+  <header>
+    <div class="logo-area">
+      <div class="logo-badge">⚡ EdgeC × Rextag</div>
+      <h1>Lead Gen AI</h1>
+      <p class="subtitle">
+        AI reads the latest news about your prospects and writes hyper-personalized outreach emails — instantly.
+      </p>
+    </div>
+    <button id="btn-start">
+      <span class="btn-icon">🚀</span> Start Pipeline
+    </button>
+  </header>
+
+  <!-- ── Progress ────────────────────────────── -->
+  <div id="progress-wrap">
+    <div class="progress-label">
+      <div class="spinner" style="width:12px;height:12px;"></div>
+      <span id="stage-label">Initializing…</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+    <div class="stages">
+      <div class="stage-pill" id="stage-news">📰 Fetching News</div>
+      <div class="stage-pill" id="stage-crawl">🕷️ Crawling Articles</div>
+      <div class="stage-pill" id="stage-llm">🤖 Generating Emails</div>
+      <div class="stage-pill" id="stage-done">✅ Complete</div>
+    </div>
+  </div>
+
+  <!-- ── Table ────────────────────────────────── -->
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>Person</th>
+          <th>Company</th>
+          <th>News Sources</th>
+          <th>Status</th>
+          <th>Generated Email</th>
+        </tr>
+      </thead>
+      <tbody id="leads-tbody">
+
+        <!-- Row 1: John Mitchell / Shell -->
+        <tr id="row-0">
+          <td>
+            <div class="person-cell">
+              <div class="avatar blue">JM</div>
+              <div class="person-info">
+                <div class="person-name">John Mitchell</div>
+                <div class="person-title">VP of Engineering</div>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="company-badge">
+              <div class="company-dot" style="background:#f7c948;"></div>
+              Shell
+            </div>
+          </td>
+          <td class="urls-cell" id="urls-0">
+            <div class="no-urls">–</div>
+          </td>
+          <td>
+            <div class="status-icon waiting" id="status-0">–</div>
+          </td>
+          <td class="email-cell">
+            <div class="email-loading" id="loading-0">
+              <div class="skel w100"></div>
+              <div class="skel w90"></div>
+              <div class="skel w80"></div>
+              <div class="skel w100"></div>
+              <div class="skel w60"></div>
+            </div>
+            <div class="email-result" id="result-0"></div>
+            <div class="email-error"  id="error-0"></div>
+            <div class="email-placeholder" id="placeholder-0">Waiting for pipeline to start…</div>
+          </td>
+        </tr>
+
+        <!-- Row 2: Sarah Chen / ExxonMobil -->
+        <tr id="row-1">
+          <td>
+            <div class="person-cell">
+              <div class="avatar purple">SC</div>
+              <div class="person-info">
+                <div class="person-name">Sarah Chen</div>
+                <div class="person-title">Director of Operations</div>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="company-badge">
+              <div class="company-dot" style="background:#3b9eff;"></div>
+              ExxonMobil
+            </div>
+          </td>
+          <td class="urls-cell" id="urls-1">
+            <div class="no-urls">–</div>
+          </td>
+          <td>
+            <div class="status-icon waiting" id="status-1">–</div>
+          </td>
+          <td class="email-cell">
+            <div class="email-loading" id="loading-1">
+              <div class="skel w100"></div>
+              <div class="skel w80"></div>
+              <div class="skel w90"></div>
+              <div class="skel w100"></div>
+              <div class="skel w70"></div>
+            </div>
+            <div class="email-result" id="result-1"></div>
+            <div class="email-error"  id="error-1"></div>
+            <div class="email-placeholder" id="placeholder-1">Waiting for pipeline to start…</div>
+          </td>
+        </tr>
+
+        <!-- Row 3: Ahmed Al-Rashid / BP -->
+        <tr id="row-2">
+          <td>
+            <div class="person-cell">
+              <div class="avatar teal">AA</div>
+              <div class="person-info">
+                <div class="person-name">Ahmed Al-Rashid</div>
+                <div class="person-title">Head of Clean Energy</div>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="company-badge">
+              <div class="company-dot" style="background:#22d3a0;"></div>
+              BP
+            </div>
+          </td>
+          <td class="urls-cell" id="urls-2">
+            <div class="no-urls">–</div>
+          </td>
+          <td>
+            <div class="status-icon waiting" id="status-2">–</div>
+          </td>
+          <td class="email-cell">
+            <div class="email-loading" id="loading-2">
+              <div class="skel w90"></div>
+              <div class="skel w100"></div>
+              <div class="skel w80"></div>
+              <div class="skel w60"></div>
+              <div class="skel w100"></div>
+            </div>
+            <div class="email-result" id="result-2"></div>
+            <div class="email-error"  id="error-2"></div>
+            <div class="email-placeholder" id="placeholder-2">Waiting for pipeline to start…</div>
+          </td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+
+  <footer>
+    Built by <span>Slah @ EdgeC</span> · Powered by crawl4ai + OpenRouter
+  </footer>
+</div>
+
+<script>
+  const btn = document.getElementById('btn-start');
+
+  /* ── Set a row to "loading" state ──────────────────── */
+  function setLoading(idx) {
+    document.getElementById(`placeholder-${idx}`).style.display = 'none';
+    document.getElementById(`loading-${idx}`).classList.add('visible');
+    const st = document.getElementById(`status-${idx}`);
+    st.className = 'status-icon loading';
+    st.innerHTML = '<div class="spinner"></div>';
+  }
+
+  /* ── Populate a row with results ───────────────────── */
+  function setResult(idx, data) {
+    // Hide loading
+    document.getElementById(`loading-${idx}`).classList.remove('visible');
+
+    // URLs
+    const urlCell = document.getElementById(`urls-${idx}`);
+    if (data.urls && data.urls.length) {
+      urlCell.innerHTML = data.urls
+        .map(u => `<a href="${u}" target="_blank" rel="noopener" title="${u}">${u.replace(/https?:\/\//,'').slice(0,40)}…</a>`)
+        .join('');
+    }
+
+    // Status
+    const st = document.getElementById(`status-${idx}`);
+    st.className = 'status-icon done';
+    st.textContent = '✓';
+
+    // Email
+    const resultEl = document.getElementById(`result-${idx}`);
+    const emailText = data.email || '';
+
+    // Split subject from body if LLM followed format
+    let subjectLine = '';
+    let bodyText = emailText;
+    const subjectMatch = emailText.match(/^Subject:\s*(.+)/im);
+    if (subjectMatch) {
+      subjectLine = subjectMatch[1].trim();
+      bodyText = emailText.replace(/^Subject:\s*.+\n?/im, '').trim();
+    }
+
+    resultEl.innerHTML = `
+      <div class="email-box">
+        <button class="copy-btn" id="copy-${idx}" onclick="copyEmail(${idx})">Copy</button>
+        ${subjectLine ? `<div class="email-subject">📧 ${subjectLine}</div>` : ''}
+        <div class="email-body">${bodyText.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+      </div>
+    `;
+    resultEl.classList.add('visible');
+  }
+
+  /* ── Show error for a row ──────────────────────────── */
+  function setError(idx, msg) {
+    document.getElementById(`loading-${idx}`).classList.remove('visible');
+    const st = document.getElementById(`status-${idx}`);
+    st.className = 'status-icon error';
+    st.textContent = '!';
+    const errEl = document.getElementById(`error-${idx}`);
+    errEl.textContent = msg;
+    errEl.classList.add('visible');
+  }
+
+  /* ── Copy email to clipboard ───────────────────────── */
+  function copyEmail(idx) {
+    const box = document.querySelector(`#result-${idx} .email-box`);
+    const text = box.querySelector('.email-body').textContent;
+    const subEl = box.querySelector('.email-subject');
+    const full = (subEl ? 'Subject: ' + subEl.textContent.replace(/^📧\s*/,'') + '\n\n' : '') + text;
+    navigator.clipboard.writeText(full).then(() => {
+      const btn = document.getElementById(`copy-${idx}`);
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+
+  /* ── Progress helpers ──────────────────────────────── */
+  function setProgress(pct, label, activeStage) {
+    document.getElementById('progress-bar').style.width = pct + '%';
+    document.getElementById('stage-label').textContent = label;
+    ['news','crawl','llm','done'].forEach(s => {
+      const el = document.getElementById('stage-' + s);
+      el.className = 'stage-pill' + (s === activeStage ? ' active' : (
+        ['news','crawl','llm','done'].indexOf(s) < ['news','crawl','llm','done'].indexOf(activeStage) ? ' done' : ''
+      ));
+    });
+  }
+
+  /* ── Main pipeline trigger ─────────────────────────── */
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Running…';
+
+    // Show progress section
+    const progWrap = document.getElementById('progress-wrap');
+    progWrap.classList.add('visible');
+    setProgress(5, 'Connecting to backend…', 'news');
+
+    // Set all rows to loading
+    [0,1,2].forEach(i => setLoading(i));
+
+    try {
+      setProgress(15, 'Searching Google News for each company…', 'news');
+
+      // Simulate progress while waiting for the long-running backend
+      let fakeProgress = 15;
+      const stages = [
+        { at: 20, pct: 30, label: 'Crawling news articles in parallel…', stage: 'crawl' },
+        { at: 80, pct: 65, label: 'Scraped articles. Asking AI to write emails…', stage: 'llm' },
+      ];
+      let stageIdx = 0;
+
+      const progressTimer = setInterval(() => {
+        fakeProgress = Math.min(fakeProgress + 0.4, 88);
+        const bar = document.getElementById('progress-bar');
+        if (bar) bar.style.width = fakeProgress + '%';
+        if (stageIdx < stages.length && fakeProgress >= stages[stageIdx].at) {
+          const s = stages[stageIdx++];
+          setProgress(s.pct, s.label, s.stage);
+        }
+      }, 400);
+
+      const resp = await fetch('/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      clearInterval(progressTimer);
+
+      if (!resp.ok) throw new Error(`Server error: ${resp.status}`);
+      const results = await resp.json();
+
+      setProgress(100, 'All emails generated!', 'done');
+
+      results.forEach((row, idx) => {
+        if (idx > 2) return; // only 3 rows
+        setResult(idx, row);
+      });
+
+    } catch (err) {
+      clearInterval?.();
+      setProgress(100, 'Pipeline error — see rows for details', 'done');
+      [0,1,2].forEach(i => setError(i, 'Pipeline failed: ' + err.message));
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<span class="btn-icon">🔄</span> Run Again';
+    }
+  });
+</script>
+
+</body>
+</html>

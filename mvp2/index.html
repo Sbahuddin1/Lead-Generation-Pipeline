@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rextag Lead Gen AI — MVP2</title>
+    <meta name="description"
+        content="Automated AI-powered lead generation system for Rextag energy infrastructure data" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <style>
+        /* ── Design tokens ─────────────────────────────── */
+        :root {
+            --bg-base: #060a12;
+            --bg-surface: #0c1220;
+            --bg-card: rgba(255, 255, 255, 0.035);
+            --bg-card-hov: rgba(255, 255, 255, 0.06);
+            --border: rgba(255, 255, 255, 0.07);
+            --border-focus: rgba(59, 158, 255, 0.4);
+            --accent-blue: #3b9eff;
+            --accent-cyan: #00d4ff;
+            --accent-purple: #a855f7;
+            --accent-green: #22d3a0;
+            --accent-amber: #f59e0b;
+            --accent-red: #f87171;
+            --text-primary: #edf2f7;
+            --text-muted: #6b8099;
+            --text-dim: #3a4f63;
+            --radius: 16px;
+            --radius-sm: 10px;
+            --radius-xs: 6px;
+            --glow-blue: 0 0 30px rgba(59, 158, 255, 0.2);
+            --glow-cyan: 0 0 20px rgba(0, 212, 255, 0.15);
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-base);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ── Background mesh ───────────────────────────── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 50% at 10% 10%, rgba(59, 158, 255, 0.06) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 60% at 90% 80%, rgba(168, 85, 247, 0.05) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 50% at 50% 30%, rgba(0, 212, 255, 0.03) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .page-wrap {
+            position: relative;
+            z-index: 1;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 44px 28px 80px;
+        }
+
+        /* ── Header ────────────────────────────────────── */
+        header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 36px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .logo-area {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .logo-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, rgba(59, 158, 255, 0.15), rgba(0, 212, 255, 0.08));
+            border: 1px solid rgba(59, 158, 255, 0.25);
+            border-radius: 100px;
+            padding: 4px 14px 4px 8px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--accent-cyan);
+            width: fit-content;
+        }
+
+        .logo-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            box-shadow: 0 0 8px var(--accent-cyan);
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-dot {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(0.7);
+            }
+        }
+
+        h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+            font-weight: 700;
+            background: linear-gradient(135deg, #f0f6ff 0%, var(--accent-cyan) 60%, var(--accent-purple) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.15;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-top: 6px;
+            max-width: 520px;
+            line-height: 1.5;
+        }
+
+        /* ── Start button ──────────────────────────────── */
+        #btn-start {
+            cursor: pointer;
+            border: none;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+            color: #fff;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            padding: 14px 36px;
+            border-radius: 12px;
+            letter-spacing: 0.03em;
+            box-shadow: 0 4px 24px rgba(59, 158, 255, 0.35), 0 1px 0 rgba(255, 255, 255, 0.15) inset;
+            transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            white-space: nowrap;
+        }
+
+        #btn-start:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(59, 158, 255, 0.45);
+        }
+
+        #btn-start:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        #btn-start:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .btn-icon {
+            font-size: 18px;
+        }
+
+        /* ── Stats cards ───────────────────────────────── */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 18px 20px;
+            backdrop-filter: blur(12px);
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .stat-card.active {
+            border-color: var(--border-focus);
+            box-shadow: var(--glow-blue);
+        }
+
+        .stat-label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .stat-value {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+            transition: color 0.3s;
+        }
+
+        .stat-card.active .stat-value {
+            color: var(--accent-cyan);
+        }
+
+        /* ── Progress section ──────────────────────────── */
+        #progress-section {
+            display: none;
+            margin-bottom: 28px;
+        }
+
+        #progress-section.visible {
+            display: block;
+        }
+
+        .progress-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .progress-label {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 100px;
+            overflow: hidden;
+            margin-bottom: 14px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
+            border-radius: 100px;
+            transition: width 0.5s ease;
+            box-shadow: var(--glow-cyan);
+        }
+
+        .stages-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .stage-chip {
+            font-size: 12px;
+            padding: 5px 12px;
+            border-radius: 100px;
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            background: transparent;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .stage-chip.active {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+            background: rgba(0, 212, 255, 0.08);
+            box-shadow: 0 0 12px rgba(0, 212, 255, 0.12);
+        }
+
+        .stage-chip.done {
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+            background: rgba(34, 211, 160, 0.06);
+        }
+
+        /* ── Leads table ───────────────────────────────── */
+        .table-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            backdrop-filter: blur(20px);
+        }
+
+        .table-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 22px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .table-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .lead-count {
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 100px;
+            background: rgba(59, 158, 255, 0.12);
+            color: var(--accent-blue);
+            font-weight: 600;
+        }
+
+        .table-scroll {
+            overflow-x: auto;
+        }
+
+        .table-card table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 900px;
+        }
+
+        .table-card thead th {
+            background: rgba(255, 255, 255, 0.025);
+            padding: 14px 18px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .table-card tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: background 0.2s;
+        }
+
+        .table-card tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .table-card tbody tr:hover {
+            background: var(--bg-card-hov);
+        }
+
+        .table-card tbody td {
+            padding: 16px 18px;
+            vertical-align: top;
+            font-size: 13px;
+        }
+
+        /* Person cell */
+        .person-cell {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            white-space: nowrap;
+        }
+
+        .avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .avatar.a0 {
+            background: linear-gradient(135deg, #1e4db7, #3b9eff);
+            color: #fff;
+        }
+
+        .avatar.a1 {
+            background: linear-gradient(135deg, #6b21a8, #a855f7);
+            color: #fff;
+        }
+
+        .avatar.a2 {
+            background: linear-gradient(135deg, #0f766e, #22d3a0);
+            color: #fff;
+        }
+
+        .avatar.a3 {
+            background: linear-gradient(135deg, #b45309, #f59e0b);
+            color: #fff;
+        }
+
+        .avatar.a4 {
+            background: linear-gradient(135deg, #be123c, #fb7185);
+            color: #fff;
+        }
+
+        .person-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .person-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 13px;
+        }
+
+        .person-title {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* Company badge */
+        .company-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.03);
+            white-space: nowrap;
+        }
+
+        .company-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        /* Source link */
+        .source-link {
+            font-size: 12px;
+            color: var(--accent-blue);
+            text-decoration: none;
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        .source-link:hover {
+            opacity: 1;
+        }
+
+        /* Context cell */
+        .context-text {
+            font-size: 12px;
+            color: var(--text-muted);
+            max-width: 240px;
+            line-height: 1.5;
+        }
+
+        /* Email address */
+        .email-addr {
+            font-size: 12px;
+            font-family: 'Space Grotesk', monospace;
+            color: var(--accent-green);
+        }
+
+        .email-addr.guessed {
+            color: var(--accent-amber);
+        }
+
+        .email-addr.none {
+            color: var(--text-dim);
+        }
+
+        .confidence-badge {
+            display: inline-block;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 6px;
+            font-weight: 600;
+        }
+
+        .confidence-badge.high {
+            background: rgba(34, 211, 160, 0.12);
+            color: var(--accent-green);
+        }
+
+        .confidence-badge.medium {
+            background: rgba(245, 158, 11, 0.12);
+            color: var(--accent-amber);
+        }
+
+        .confidence-badge.low {
+            background: rgba(248, 113, 113, 0.12);
+            color: var(--accent-red);
+        }
+
+        /* Generated email */
+        .email-cell {
+            min-width: 260px;
+            max-width: 380px;
+        }
+
+        .email-box {
+            background: rgba(59, 158, 255, 0.04);
+            border: 1px solid rgba(59, 158, 255, 0.12);
+            border-radius: var(--radius-xs);
+            padding: 12px 14px;
+            font-size: 12px;
+            line-height: 1.6;
+            color: #c0d6ed;
+            position: relative;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .email-box::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .email-box::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .email-subject {
+            font-weight: 600;
+            color: var(--accent-cyan);
+            font-size: 11px;
+            margin-bottom: 8px;
+        }
+
+        .email-body {
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-muted);
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            z-index: 2;
+        }
+
+        .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+        }
+
+        .copy-btn.copied {
+            color: var(--accent-green);
+            border-color: var(--accent-green);
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-dim);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state-text {
+            font-size: 15px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .empty-state-sub {
+            font-size: 13px;
+        }
+
+        /* Spinner */
+        .spinner {
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(59, 158, 255, 0.2);
+            border-top-color: var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            flex-shrink: 0;
+        }
+
+        .spinner.sm {
+            width: 12px;
+            height: 12px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ── Footer ────────────────────────────────────── */
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+
+        footer span {
+            color: var(--accent-blue);
+        }
+
+        /* ── Responsive ────────────────────────────────── */
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .email-cell {
+                min-width: 200px;
+            }
+        }
+
+        /* Row enter animation */
+        @keyframes row-fade-in {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .table-card tbody tr {
+            animation: row-fade-in 0.4s ease both;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-wrap">
+
+        <!-- ── Header ──────────────────────────────── -->
+        <header>
+            <div class="logo-area">
+                <div class="logo-badge">⚡ Rextag AI</div>
+                <h1>Lead Generation Pipeline</h1>
+                <p class="subtitle">
+                    AI-powered system that scans energy news, identifies potential customers,
+                    finds contacts, and writes personalized outreach — fully automated.
+                </p>
+            </div>
+            <button id="btn-start">
+                <span class="btn-icon">🚀</span> Start Pipeline
+            </button>
+        </header>
+
+        <!-- ── Stats Row ───────────────────────────── -->
+        <div class="stats-row">
+            <div class="stat-card" id="stat-scanned">
+                <div class="stat-label">📰 Articles Scanned</div>
+                <div class="stat-value" id="val-scanned">—</div>
+            </div>
+            <div class="stat-card" id="stat-keyword">
+                <div class="stat-label">🔑 Keyword Matches</div>
+                <div class="stat-value" id="val-keyword">—</div>
+            </div>
+            <div class="stat-card" id="stat-llm">
+                <div class="stat-label">🤖 AI Approved</div>
+                <div class="stat-value" id="val-llm">—</div>
+            </div>
+            <div class="stat-card" id="stat-contacts">
+                <div class="stat-label">👤 Contacts Found</div>
+                <div class="stat-value" id="val-contacts">—</div>
+            </div>
+            <div class="stat-card" id="stat-emails">
+                <div class="stat-label">📧 Emails Found</div>
+                <div class="stat-value" id="val-emails">—</div>
+            </div>
+            <div class="stat-card" id="stat-generated">
+                <div class="stat-label">✉️ Emails Written</div>
+                <div class="stat-value" id="val-generated">—</div>
+            </div>
+        </div>
+
+        <!-- ── Progress ────────────────────────────── -->
+        <div id="progress-section">
+            <div class="progress-header">
+                <div class="spinner sm"></div>
+                <span class="progress-label" id="progress-label">Initializing…</span>
+            </div>
+            <div class="progress-track">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <div class="stages-row">
+                <div class="stage-chip" data-stage="rss">📰 RSS Feeds</div>
+                <div class="stage-chip" data-stage="keyword">🔑 Keywords</div>
+                <div class="stage-chip" data-stage="llm">🤖 AI Filter</div>
+                <div class="stage-chip" data-stage="crawl">🕷️ Crawl & Extract</div>
+                <div class="stage-chip" data-stage="email">📧 Find Emails</div>
+                <div class="stage-chip" data-stage="generate">✉️ Write Emails</div>
+                <div class="stage-chip" data-stage="done">✅ Done</div>
+            </div>
+        </div>
+
+        <!-- ── Leads Table ─────────────────────────── -->
+        <div class="table-card">
+            <div class="table-header">
+                <div class="table-title">🎯 Discovered Leads</div>
+                <div class="lead-count" id="lead-count">0 leads</div>
+            </div>
+            <div class="table-scroll">
+                <table id="leads-table" style="display:none;">
+                    <thead>
+                        <tr>
+                            <th>Person</th>
+                            <th>Company</th>
+                            <th>Source</th>
+                            <th>Context</th>
+                            <th>Email Address</th>
+                            <th>Generated Outreach</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leads-tbody"></tbody>
+                </table>
+            </div>
+            <div class="empty-state" id="empty-state">
+                <div class="empty-state-icon">🔍</div>
+                <div class="empty-state-text">No leads yet</div>
+                <div class="empty-state-sub">Click "Start Pipeline" to scan energy news and discover leads</div>
+            </div>
+        </div>
+
+        <footer>
+            Built for <span>Rextag</span> · Powered by RSS + AI + crawl4ai
+        </footer>
+    </div>
+
+    <script>
+        /* ── DOM refs ──────────────────────────────────────────── */
+        const btn = document.getElementById('btn-start');
+        const progressSection = document.getElementById('progress-section');
+        const progressLabel = document.getElementById('progress-label');
+        const progressFill = document.getElementById('progress-fill');
+        const stageChips = document.querySelectorAll('.stage-chip');
+        const leadsTable = document.getElementById('leads-table');
+        const leadsTbody = document.getElementById('leads-tbody');
+        const emptyState = document.getElementById('empty-state');
+        const leadCountBadge = document.getElementById('lead-count');
+
+        // Stats
+        const statMap = {
+            articles_scanned: { val: 'val-scanned', card: 'stat-scanned' },
+            keyword_matches: { val: 'val-keyword', card: 'stat-keyword' },
+            llm_approved: { val: 'val-llm', card: 'stat-llm' },
+            contacts_extracted: { val: 'val-contacts', card: 'stat-contacts' },
+            emails_found: { val: 'val-emails', card: 'stat-emails' },
+            emails_generated: { val: 'val-generated', card: 'stat-generated' },
+        };
+
+        const stageOrder = ['rss', 'keyword', 'llm', 'crawl', 'email', 'generate', 'done'];
+        const avatarColors = ['a0', 'a1', 'a2', 'a3', 'a4'];
+        const dotColors = ['#3b9eff', '#a855f7', '#22d3a0', '#f59e0b', '#fb7185', '#00d4ff'];
+
+        /* ── Update stats cards ────────────────────────────────── */
+        function updateStats(stats) {
+            for (const [key, ids] of Object.entries(statMap)) {
+                const val = stats[key];
+                if (val !== undefined && val !== null) {
+                    document.getElementById(ids.val).textContent = val;
+                }
+            }
+        }
+
+        /* ── Update progress bar & stage chips ─────────────────── */
+        function setProgress(pct, label, activeStage) {
+            progressFill.style.width = pct + '%';
+            progressLabel.textContent = label;
+
+            const activeIdx = stageOrder.indexOf(activeStage);
+            stageChips.forEach(chip => {
+                const s = chip.dataset.stage;
+                const sIdx = stageOrder.indexOf(s);
+                chip.className = 'stage-chip' + (
+                    s === activeStage ? ' active' :
+                        sIdx < activeIdx ? ' done' : ''
+                );
+            });
+
+            // Activate the corresponding stat card
+            document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+            const stageToStat = {
+                rss: 'stat-scanned',
+                keyword: 'stat-keyword',
+                llm: 'stat-llm',
+                crawl: 'stat-contacts',
+                email: 'stat-emails',
+                generate: 'stat-generated',
+            };
+            const statId = stageToStat[activeStage];
+            if (statId) document.getElementById(statId)?.classList.add('active');
+        }
+
+        /* ── Render a lead row ─────────────────────────────────── */
+        function addLeadRow(lead, idx) {
+            const name = lead.person_name || 'Contact TBD';
+            const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+            const avatarClass = avatarColors[idx % avatarColors.length];
+            const dotColor = dotColors[idx % dotColors.length];
+
+            const title = lead.person_title || '';
+            const company = lead.company_name || '—';
+            const sourceUrl = lead.source_url || '';
+            const sourceTitle = lead.source_title || 'Source';
+            const context = lead.context || '';
+            const email = lead.email || '';
+            const confidence = lead.email_confidence || 0;
+            const genEmail = lead.generated_email || '';
+
+            // Email display
+            let emailHtml;
+            if (email) {
+                const confClass = confidence >= 70 ? 'high' : confidence >= 40 ? 'medium' : 'low';
+                const confLabel = confidence >= 70 ? 'Verified' : confidence >= 40 ? 'Likely' : 'Guessed';
+                emailHtml = `<span class="email-addr${confidence < 40 ? ' guessed' : ''}">${esc(email)}</span>` +
+                    `<span class="confidence-badge ${confClass}">${confLabel}</span>`;
+            } else {
+                emailHtml = `<span class="email-addr none">Not found</span>`;
+            }
+
+            // Generated email display
+            let genHtml;
+            if (genEmail && !genEmail.startsWith('(')) {
+                let subject = '', body = genEmail;
+                const m = genEmail.match(/^Subject:\s*(.+)/im);
+                if (m) {
+                    subject = m[1].trim();
+                    body = genEmail.replace(/^Subject:\s*.+\n?/im, '').trim();
+                }
+                genHtml = `
+        <div class="email-box">
+          <button class="copy-btn" onclick="copyEmail(this, ${idx})">Copy</button>
+          ${subject ? `<div class="email-subject">📧 ${esc(subject)}</div>` : ''}
+          <div class="email-body">${esc(body)}</div>
+        </div>`;
+            } else {
+                genHtml = `<span style="font-size:12px;color:var(--text-dim)">${esc(genEmail || 'Pending...')}</span>`;
+            }
+
+            const tr = document.createElement('tr');
+            tr.style.animationDelay = (idx * 0.06) + 's';
+            tr.innerHTML = `
+      <td>
+        <div class="person-cell">
+          <div class="avatar ${avatarClass}">${initials}</div>
+          <div class="person-info">
+            <div class="person-name">${esc(name)}</div>
+            ${title ? `<div class="person-title">${esc(title)}</div>` : ''}
+          </div>
+        </div>
+      </td>
+      <td>
+        <div class="company-badge">
+          <div class="company-dot" style="background:${dotColor}"></div>
+          ${esc(company)}
+        </div>
+      </td>
+      <td>
+        ${sourceUrl ? `<a class="source-link" href="${esc(sourceUrl)}" target="_blank" title="${esc(sourceTitle)}">${esc(sourceTitle.slice(0, 45))}…</a>` : '<span class="source-link">—</span>'}
+      </td>
+      <td>
+        <div class="context-text">${esc(context.slice(0, 200))}${context.length > 200 ? '…' : ''}</div>
+      </td>
+      <td>${emailHtml}</td>
+      <td class="email-cell">${genHtml}</td>
+    `;
+
+            leadsTbody.appendChild(tr);
+        }
+
+        /* ── Copy email ────────────────────────────────────────── */
+        function copyEmail(btnEl, idx) {
+            const box = btnEl.closest('.email-box');
+            const body = box.querySelector('.email-body')?.textContent || '';
+            const subEl = box.querySelector('.email-subject');
+            const full = (subEl ? 'Subject: ' + subEl.textContent.replace(/^📧\s*/, '') + '\n\n' : '') + body;
+            navigator.clipboard.writeText(full).then(() => {
+                btnEl.textContent = 'Copied!';
+                btnEl.classList.add('copied');
+                setTimeout(() => { btnEl.textContent = 'Copy'; btnEl.classList.remove('copied'); }, 2000);
+            });
+        }
+
+        /* ── HTML escape ───────────────────────────────────────── */
+        function esc(s) {
+            const d = document.createElement('div');
+            d.textContent = s;
+            return d.innerHTML;
+        }
+
+        /* ── Main pipeline trigger ─────────────────────────────── */
+        btn.addEventListener('click', async () => {
+            btn.disabled = true;
+            btn.innerHTML = '<div class="spinner"></div> Running Pipeline…';
+
+            // Reset UI
+            leadsTbody.innerHTML = '';
+            leadsTable.style.display = 'none';
+            emptyState.style.display = 'block';
+            leadCountBadge.textContent = '0 leads';
+            for (const ids of Object.values(statMap)) {
+                document.getElementById(ids.val).textContent = '—';
+            }
+
+            // Show progress
+            progressSection.classList.add('visible');
+            setProgress(2, 'Starting pipeline…', 'rss');
+
+            try {
+                // 1) Start the pipeline
+                const startResp = await fetch('/start', { method: 'POST' });
+                if (!startResp.ok) {
+                    const err = await startResp.json();
+                    throw new Error(err.error || `Server returned ${startResp.status}`);
+                }
+
+                // 2) Listen to SSE progress
+                const evtSource = new EventSource('/progress');
+
+                evtSource.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+
+                    if (data.type === 'progress') {
+                        setProgress(data.pct, data.label, data.stage);
+                        if (data.stats) updateStats(data.stats);
+                    }
+
+                    if (data.type === 'complete') {
+                        evtSource.close();
+                        setProgress(100, 'Pipeline complete!', 'done');
+                        if (data.stats) updateStats(data.stats);
+
+                        // Fetch full results
+                        fetch('/results')
+                            .then(r => r.json())
+                            .then(result => {
+                                const leads = result.leads || [];
+                                if (leads.length > 0) {
+                                    emptyState.style.display = 'none';
+                                    leadsTable.style.display = 'table';
+                                    leadCountBadge.textContent = leads.length + ' lead' + (leads.length !== 1 ? 's' : '');
+                                    leads.forEach((lead, i) => addLeadRow(lead, i));
+                                } else {
+                                    emptyState.querySelector('.empty-state-text').textContent = 'No leads found';
+                                    emptyState.querySelector('.empty-state-sub').textContent = 'Try adjusting keywords or RSS sources';
+                                }
+                                btn.disabled = false;
+                                btn.innerHTML = '<span class="btn-icon">🚀</span> Run Again';
+                            });
+                    }
+
+                    if (data.type === 'error') {
+                        evtSource.close();
+                        setProgress(100, '❌ Error: ' + (data.message || 'Unknown'), 'done');
+                        btn.disabled = false;
+                        btn.innerHTML = '<span class="btn-icon">🚀</span> Retry Pipeline';
+                    }
+                };
+
+                evtSource.onerror = () => {
+                    evtSource.close();
+                    btn.disabled = false;
+                    btn.innerHTML = '<span class="btn-icon">🚀</span> Retry Pipeline';
+                };
+
+            } catch (err) {
+                setProgress(100, '❌ ' + err.message, 'done');
+                btn.disabled = false;
+                btn.innerHTML = '<span class="btn-icon">🚀</span> Retry Pipeline';
+            }
+        });
+    </script>
+</body>
+
+</html>
